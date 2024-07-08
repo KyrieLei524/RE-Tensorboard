@@ -1,6 +1,7 @@
 <script setup>
 import HelloWorld from './components/HelloWorld.vue'
 import DAG from './components/DAG.vue'
+import new_nodes from './components/new_node.vue'
 </script>
 
 <template>
@@ -14,6 +15,7 @@ import DAG from './components/DAG.vue'
   </div>
   <HelloWorld msg="Vite + Vue" /> -->
   <DAG />
+   <!-- <new_nodes /> -->
 </template>
 
 <style scoped>

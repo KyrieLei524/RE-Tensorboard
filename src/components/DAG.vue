@@ -2,7 +2,7 @@
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3";
 import { onMounted } from "vue";
-import nodes from "../data/nodes.json";
+import nodes from "../../../../nodes.json";
 
 const digraphdHandle = () => {
   // 初始化 graph
@@ -16,99 +16,70 @@ const digraphdHandle = () => {
   // 方向
   g.graph().rankdir = "BT";
 
-  //处理json中的node信息
+  // 处理json中的node信息
   var map = new Map();
-    for (const node of nodes) {
-        map.set(node.name, node);
-    }
+  for (const node of nodes) {
+    map.set(node.name, node);
+  }
 
   // 添加节点
   for (const node of nodes) {
     console.log(node.layer_num);
-    if(node.layer_num === 1){
-        g.setNode(node.name, {
-            label: node.name,
-        });
-        var output_edges = node.output_edges;
-        for (const edge of output_edges) {
-            var output = edge.output;
-            var output_node = map.get(output);
-            if(output_node.layer_num === 1){
-                g.setEdge(node.name, output);
-            }
-        }
-        
 
+    if (node.layer_num === 1 && node.name !== "NoOp") {
+      var shape = 'rect';
+
+      // 加入点 处理Const 节点和 NoOp节点
+      if (node.node_type === 0) {
+        shape = 'circle';
+      } else if (node.node_type === 1) {
+        shape = 'ellipse';
+      } else if (node.node_type === 2) {
+        shape = 'rect';
+      } else if (node.node_type === 3) {
+        shape = 'polygon';
+      }
+
+      g.setNode(node.name, {
+        shape: shape,
+        label: node.name,
+      });
+
+      // 加入边
+      var output_edges = node.output_edges;
+      for (const edge of output_edges) {
+        var output = edge.output;
+        if (output === "NoOp") continue;
+        var output_node = map.get(output);
+        if (output_node.layer_num === 1) {
+          g.setEdge(node.name, output);
+        }
+      }
     }
   }
-  
-//   g.setNode("A", {
-//     shape: "circle",
-//     label: "A",
-//     style: "fill: #afa",
-//   });
-//   g.setNode("B", { label: "label：B" });
-//   g.setNode("C", { label: "CCC" });
-//   g.setNode("D", { label: "D" });
-//   g.setNode("E", { label: "E" });
-//   g.setNode("F", { label: "F" });
 
-//   // 绘制连接线
-//   g.setEdge("A", "B", {
-//     arrowhead: "vee",
-//     arrowheadStyle: "fill: #f66",
-//     style: "stroke: #f66;stroke-width: 1.5px;stroke-dasharray: 5, 5;",
-//   });
-//   g.setEdge("A", "C", {
-//     arrowhead: "undirected",
-//     curve: d3.curveBasis,
-//   });
-//   g.setEdge("B", "D");
-//   g.setEdge("C", "E");
-//   g.setEdge("D", "F");
-//   g.setEdge("E", "F");
+  // g.nodes().forEach(function (v) {
+  //   var node = g.node(v);
+  //   console.log(node);
+  // });
 
-
-  const svg = d3.select("#graphSvg");
+  var svg = d3.select("#graphSvg");
 
   var inner = svg.append("g");
 
   var zoom = d3.zoom().on("zoom", function () {
     inner.attr("transform", d3.event.transform);
   });
-    svg.call(zoom);
+  svg.call(zoom);
 
   const render = new dagreD3.render();
 
-  // Center the graph
-  const svgGroup = svg.append("g");
-  render(d3.select("svg g"), g);
-  
+  // 渲染图形
+  render(inner, g);
+
+
   svg.attr("width", 1000);
   svg.attr("height", 600);
-
-
-
-
-
-
-
-
-  
-//   // 添加点击事件处理函数
-//   d3.selectAll(".node").on("click", function (d) {
-//     const nodeId = d3.select(this).select("text").text();
-//     if (nodeId === "label：B") {
-//       // 放大节点
-//       d3.select(this).select("rect")
-//         .transition()
-//         .attr("width", 100)
-//         .attr("height", 100)
-//         .attr("x", -50)
-//         .attr("y", -50);
-        
-//     }
-//   });
 };
 
 onMounted(() => {
@@ -126,19 +97,20 @@ onMounted(() => {
 .graph {
   background-color: antiquewhite;
 }
+
 #graphSvg {
   background-color: #e5ebd3;
 }
-.node rect {
-  stroke: #999;
+
+.node rect,
+.node circle,
+.node ellipse,
+.node polygon {
+  stroke: #333;
   fill: #fff;
   stroke-width: 1.5px;
 }
-.node circle {
-  stroke: #999;
-  /* fill: #fff; */
-  stroke-width: 1.5px;
-}
+
 .edgePath path.path {
   stroke: #333;
   fill: none;
