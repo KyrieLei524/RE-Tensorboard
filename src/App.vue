@@ -1,7 +1,7 @@
 <script setup>
 import HelloWorld from './components/HelloWorld.vue'
 import DAG from './components/DAG.vue'
-import new_nodes from './components/new_node.vue'
+import new_nodes from './components/dagre_try.vue'
 </script>
 
 <template>

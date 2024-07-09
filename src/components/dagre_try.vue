@@ -41,6 +41,7 @@
         g.setEdge("bpitt",     "kbacon");
         g.setEdge("hford",     "lwilson");
         g.setEdge("lwilson",   "kbacon");
+        g.setEdge("lwilson",   "kspacey");
   
         // Layout the graph
         dagre.layout(g);

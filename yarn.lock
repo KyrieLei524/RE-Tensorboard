@@ -826,6 +826,13 @@ async-validator@^4.2.5:
   resolved "https://registry.npmmirror.com/async-validator/-/async-validator-4.2.5.tgz"
   integrity sha512-7HhHjtERjqlNbZtqNqy2rckN/SpOOlmDliet+lP7k+eKZEjPk3DgyeU9lIXLdeLz0uBbbVp+9Qdow9wJWgwwfg==
 
+backbone@~1.4.1:
+  version "1.4.1"
+  resolved "https://registry.npmmirror.com/backbone/-/backbone-1.4.1.tgz#099a78184bc07b034048a8332229c2ccca1e3e62"
+  integrity sha512-ADy1ztN074YkWbHi8ojJVFe3vAanO/lrzMGZWUClIP7oDD/Pjy2vrASraUP+2EVCfIiTtCW4FChVow01XneivA==
+  dependencies:
+    underscore ">=1.8.3"
+
 commander@2:
   version "2.20.3"
   resolved "https://registry.npmmirror.com/commander/-/commander-2.20.3.tgz"
@@ -1094,7 +1101,7 @@ dagre-d3@0.6.4:
     graphlib "^2.1.8"
     lodash "^4.17.15"
 
-dagre@^0.8.5:
+dagre@^0.8.5, dagre@~0.8.5:
   version "0.8.5"
   resolved "https://registry.npmmirror.com/dagre/-/dagre-0.8.5.tgz"
   integrity sha512-/aTqmnRta7x7MCCpExk7HQL2O4owCT2h8NT//9I1OQ9vt29Pa0BzSAkR5lwFUcQ7491yVi/3CXU9jQ5o0Mn2Sw==
@@ -1177,7 +1184,7 @@ fsevents@~2.3.2, fsevents@~2.3.3:
   resolved "https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
-graphlib@^2.1.8:
+graphlib@^2.1.8, graphlib@~2.1.8:
   version "2.1.8"
   resolved "https://registry.npmmirror.com/graphlib/-/graphlib-2.1.8.tgz"
   integrity sha512-jcLLfkpoVGmH7/InMC/1hIvOPSUh38oJtGhvrOFGzioE1DZ+0YW16RgmOJhHiuWTvGiJQ9Z1Ik43JvkRPRvE+A==
@@ -1191,6 +1198,22 @@ iconv-lite@0.4:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
+jointjs@^3.7.7:
+  version "3.7.7"
+  resolved "https://registry.npmmirror.com/jointjs/-/jointjs-3.7.7.tgz#d3255f18f6b0ed3074c488ac0178d0338b6051dd"
+  integrity sha512-gwjyLfXIxovVCIHrg57WG0cyPt6dsJjgnGEGOt8gh2F2kp/T1x6z7kBf62eQqSnM7qn1XiheZV4Iopzd2doHlw==
+  dependencies:
+    backbone "~1.4.1"
+    dagre "~0.8.5"
+    graphlib "~2.1.8"
+    jquery "~3.7.1"
+    lodash "~4.17.21"
+
+jquery@~3.7.1:
+  version "3.7.1"
+  resolved "https://registry.npmmirror.com/jquery/-/jquery-3.7.1.tgz#083ef98927c9a6a74d05a6af02806566d16274de"
+  integrity sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==
+
 lodash-es@^4.17.21:
   version "4.17.21"
   resolved "https://registry.npmmirror.com/lodash-es/-/lodash-es-4.17.21.tgz"
@@ -1201,7 +1224,7 @@ lodash-unified@^1.0.2:
   resolved "https://registry.npmmirror.com/lodash-unified/-/lodash-unified-1.0.3.tgz"
   integrity sha512-WK9qSozxXOD7ZJQlpSqOT+om2ZfcT4yO+03FuzAHD0wF6S0l0090LRPDx3vhTTLZ8cFKpBn+IOcVXK6qOcIlfQ==
 
-lodash@^4.17.15, lodash@^4.17.21:
+lodash@^4.17.15, lodash@^4.17.21, lodash@~4.17.21:
   version "4.17.21"
   resolved "https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -1281,6 +1304,11 @@ source-map-js@^1.2.0:
   version "1.2.0"
   resolved "https://registry.npmmirror.com/source-map-js/-/source-map-js-1.2.0.tgz"
   integrity sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==
+
+underscore@>=1.8.3:
+  version "1.13.6"
+  resolved "https://registry.npmmirror.com/underscore/-/underscore-1.13.6.tgz#04786a1f589dc6c09f761fc5f45b89e935136441"
+  integrity sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==
 
 vite@^5.3.1:
   version "5.3.3"
