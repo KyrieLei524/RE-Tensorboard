@@ -14,8 +14,8 @@ import new_nodes from './components/new_node.vue'
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" /> -->
-  <DAG />
-   <!-- <new_nodes /> -->
+  <!-- <DAG /> -->
+   <new_nodes />
 </template>
 
 <style scoped>
