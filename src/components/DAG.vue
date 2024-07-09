@@ -1,8 +1,18 @@
+<template>
+  <div class="graph">
+    <svg id="graphSvg" width="800" height="600"></svg>
+  </div>
+  <div class="tooltip">
+    
+  </div>
+</template>
+
 <script setup>
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3";
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import nodes from "../../../../nodes.json";
+
 
 const digraphdHandle = () => {
   // 初始化 graph
@@ -42,32 +52,44 @@ const digraphdHandle = () => {
 
       g.setNode(node.name, {
         shape: shape,
-        label: node.name,
+        label: node.name.split("/").pop(),
+        rx: 5,
+        ry: 5,
+        labelStyle: "margin-right: 50px; font-weight: bold; font-size: 12px;",
       });
 
       // 加入边
       var output_edges = node.output_edges;
+
+       // 加入边
+       var output_edges = node.output_edges;
+      //统计输出边中是否存在相同目标节点的情况 统计
+      var output_map = new Map(); // key: output, value: count
       for (const edge of output_edges) {
         var output = edge.output;
         if (output === "NoOp") continue;
         var output_node = map.get(output);
-        if (output_node.layer_num === 1) {
-          g.setEdge(node.name, output);
+        if(output_node.layer_num !== 1) continue;
+        if (output_map.has(output)) {
+          output_map.set(output, output_map.get(output) + 1);
+        } else {
+          output_map.set(output, 1);
         }
+      }
+      for(const [key, value] of output_map) {
+        g.setEdge(node.name, key, {
+          label: value,
+          labelpos: "c",
+        });
       }
     }
   }
-
-  // g.nodes().forEach(function (v) {
-  //   var node = g.node(v);
-  //   console.log(node);
-  // });
 
   var svg = d3.select("#graphSvg");
 
   var inner = svg.append("g");
 
-  var zoom = d3.zoom().on("zoom", function () {
+  var zoom = d3.zoom().on("zoom", function (event) {
     inner.attr("transform", d3.event.transform);
   });
   svg.call(zoom);
@@ -77,38 +99,59 @@ const digraphdHandle = () => {
   // 渲染图形
   render(inner, g);
 
-
   svg.attr("width", 1000);
   svg.attr("height", 600);
+
+  inner.selectAll("g.node")
+    .on("mouseover", (event) => showTooltip(event))
+    .on("mouseout", () => hideTooltip());
 };
 
 onMounted(() => {
   digraphdHandle();
 });
+
+const showTooltip = (event) => {
+  console.log(event);
+};
+
+const hideTooltip = () => {
+  console.log("hide");
+};
 </script>
 
-<template>
-  <div class="graph">
-    <svg id="graphSvg" width="800" height="600"></svg>
-  </div>
-</template>
-
 <style>
+
+
 .graph {
-  background-color: antiquewhite;
+  /* background-color: antiquewhite; */
 }
 
 #graphSvg {
-  background-color: #e5ebd3;
+  /* background-color: #e5ebd3; */
 }
 
 .node rect,
 .node circle,
 .node ellipse,
-.node polygon {
+.node polygon
+{
   stroke: #333;
   fill: #fff;
   stroke-width: 1.5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.node:hover rect,
+.node:hover circle,
+.node:hover ellipse,
+.node:hover polygon
+{
+  stroke: #333;
+  fill: #f5f5f5;
+  stroke-width: 1.5px;
+  filter: url(#hover-shadow);
+  transform: scale(1.1);
 }
 
 .edgePath path.path {
@@ -116,4 +159,5 @@ onMounted(() => {
   fill: none;
   stroke-width: 1.5px;
 }
+
 </style>
