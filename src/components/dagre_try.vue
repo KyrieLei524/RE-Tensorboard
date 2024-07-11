@@ -1,19 +1,42 @@
 <template>
-  <div>
+
+  <div class="node-info-panel" v-if="selectedNode">
+    <h3>{{ selectedNode.raw_info['name'] }}</h3>
+    <p><strong>Operation:</strong> {{ selectedNode.raw_info['op'] }}</p>
+    <div class="attributes-section">
+      <h4>Attributes ({{ Object.keys(selectedNode.raw_info['attr']).length }})</h4>
+      <div v-for="(value, key) in selectedNode.raw_info['attr']" :key="key" class="attribute">
+        <p><strong>{{ key }}:</strong> {{ value }}</p>
+      </div>
+       </div>
+    <div class="inputs-section" v-if="selectedNode">
+      <h4>Inputs ({{ selectedNode.input_num }})</h4>
+      <div v-for="input in selectedNode.raw_info['input_edges']" :key="input" class="input">
+        {{ input['input'] }}
+      </div>
+    </div>
+    <div class="outputs-section" v-if="selectedNode">
+      <h4>Outputs ({{ selectedNode.output_num }})</h4>
+      <div v-for="output in selectedNode.raw_info['output_edges']" :key="output" class="output">
+        {{ output['output'] }}
+      </div>
+    </div>
   </div>
+
   <div>
-    <svg ref="svg" :width="width" :height="height" style="background-color: aliceblue;"></svg>
+    <svg ref="svg" :width="width" :height="height"></svg>
   </div>
-  
+
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import * as d3 from 'd3';
 import dagre from 'dagre';
 import node_data from "../../../../nodes.json";
-const width = 1000;
-const height = 1000;
+import { componentToSlot } from 'element-plus/es/components/table-v2/src/utils.mjs';
+const width = 800;
+const height = 800;
 const svg = ref(null);
 
 
@@ -29,7 +52,7 @@ const g = new dagre.graphlib.Graph();
 //首先根据每个node的json完整信息建立存图所有的数据节点信息 先不存图的子节点信息 先把所有的节点建立起来 并存到map里面再说
 var my_nodes = new Map();
 
-var root_node = {
+var root = {
   label: 'root',
   children: [],
   expanded: true,
@@ -42,13 +65,15 @@ var root_node = {
   parent: null,
   raw_info: {
     attr: ""
-  }
+  },
+  input_num: 0,
+  output_num: 0
 };
-my_nodes.set('root', root_node);
+my_nodes.set('root', root);
 
-//把
+
 node_data.forEach(element => {
-  // console.log(element);
+  // console.log(element.attr);
   var node = {
     label: element.name,
     children: [],
@@ -60,8 +85,11 @@ node_data.forEach(element => {
     x: 0,
     y: 0,
     parent: element.parent,
-    raw_info: element
+    raw_info: element,
+    input_num: element.input_edges.length,
+    output_num: element.output_edges.length
   };
+  console.log(element.input_edges.length);
   if (node.parent === null || element.layer_num === 1) {
     node.parent = 'root';
   }
@@ -71,7 +99,7 @@ node_data.forEach(element => {
 //首先把root的children信息处理一下
 node_data.forEach(element => {
   if (element.layer_num === 1) {
-    root_node.children.push(my_nodes.get(element.name));
+    root.children.push(my_nodes.get(element.name));
   }
 });
 
@@ -124,7 +152,7 @@ console.log(my_nodes.get('ExpandDims/dim'));
 my_edges.forEach((value, key) => {
   const source = value.source;
   const target = value.target;
-  if(source === 'NoOp' || target === 'NoOp'){
+  if (source === 'NoOp' || target === 'NoOp') {
     return;
   }
   const edge_obj = {
@@ -140,131 +168,13 @@ my_edges.forEach((value, key) => {
   }
 });
 
-// var A1 = {
-//   label: 'A1',
-//   children: [],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [],
-//   x: 0,
-//   y: 0
-// };
-// var A2 = {
-//   label: 'A2',
-//   children: [],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [],
-//   x: 0,
-//   y: 0
-// };
-// var A = {
-//   label: 'A',
-//   children: [A1, A2
-//   ],
-//   expanded: false,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [{
-//     source: 'A2',
-//     target: 'A1',
-//   }],
-//   x: 0,
-//   y: 0
-// };
-// var B1 = {
-//   label: 'B1',
-//   children: [],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [],
-//   x: 0,
-//   y: 0
-// };
-// var B2 = {
-//   label: 'B2',
-//   children: [],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [],
-//   x: 0,
-//   y: 0
-// };
-// var B = {
-//   label: 'B',
-//   children: [B1, B2
-//   ],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [{
-//     source: 'B1',
-//     target: 'B2',
-//   }],
-//   x: 0,
-//   y: 0
 
-// };
-// var C = {
-//   label: 'C',
-//   children: [
-//   ],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [],
-//   x: 0,
-//   y: 0
-// };
-// var root = {
-//   label: 'r',
-//   children: [A, B, C
-//   ],
-//   expanded: true,
-//   dagreGraph: null,
-//   width: 0,
-//   height: 0,
-//   edges: [{
-//     source: 'A',
-//     target: 'B',
-//   }, {
-//     source: 'C',
-//     target: 'B',
-//   }, {
-//     source: 'A',
-//     target: 'C',
-
-//   }],
-//   x: 0,
-//   y: 0
-// };
 
 var map = my_nodes;
 
-console.log(root_node);
+console.log(root);
 
-var seletedNode = root_node;
-
-// const map = new Map();
-// map.set('A', A);
-// map.set('B', B);
-// map.set('C', C);
-// map.set('A1', A1);
-// map.set('A2', A2);
-// map.set('root', root);
-// map.set('B1', B1);
-// map.set('B2', B2);
+var selectedNode = ref(root);
 
 function compute_node(node) {
   if (node.children.length == 0 || !node.expanded) {
@@ -379,8 +289,8 @@ function draw_root(root, svgGroup) {
       })
       .on("click", function (event) {
         console.log("click");
-        seletedNode = node_obj;
-        console.log(seletedNode);
+        selectedNode.value = node_obj;
+        console.log(selectedNode);
       });
 
     nodeGroup.append("text")
@@ -472,8 +382,8 @@ const renderGraph = () => {
       .attr("transform", `translate(${n.x - n.width / 2}, ${n.y - n.height / 2})`);
 
     nodeGroup.append("rect")
-      .attr("width", n.width)
-      .attr("height", n.height)
+      .attr("width", n.width - 40)
+      .attr("height", n.height - 60)
       .attr("stroke", "#333")
       .attr("fill", "#fff");
 
@@ -500,9 +410,9 @@ onMounted(() => {
   //所有内容都画在svgGroup上
 
 
-  compute_node(root_node);
-  // console.log(root_node);
-  draw_root(root_node, svgGroup);
+  compute_node(root);
+  // console.log(root);
+  draw_root(root, svgGroup);
 
   const zoom = d3.zoom().on("zoom", function (event) {
     svgGroup.attr("transform", d3.event.transform);
@@ -522,6 +432,32 @@ onMounted(() => {
   stroke-width: 1.5px;
 }
 
+.node-info-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 400px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+
+
+}
+
+.attributes-section,
+.inputs-section,
+.outputs-section {
+  margin-top: 10px;
+}
+
+.attribute,
+.input,
+.output {
+  padding: 5px;
+  background-color: #ffffff;
+  border-radius: 3px;
+  margin-top: 5px;
+}
 
 .node rect,
 .node circle,
