@@ -112,7 +112,6 @@ var C = {
   y: 0
 };
 
-
 var root = {
   label: 'root',
   children: [A, B, C
@@ -190,18 +189,20 @@ function compute_node(node) {
   node.height = graph.height * 1.1;
 }
 
-function draw_root(root) {
+
+function draw_root(root, svgGroup) {
   if (root.children.length == 0 || !root.expanded) {
     return;
   }
   //先画这个节点的图
   var g = root.dagreGraph;
   // Create an SVG group
-  const svgEl = d3.select(svg.value);
-  const svgGroup = svgEl.append("g");
+
   // Draw edges
-  console.log(root.label);
-  console.log(g.edges());
+  // console.log(root.label);
+  // console.log(g.edges());
+
+
   g.edges().forEach(edge => {
     const points = g.edge(edge).points;
     const lineGenerator = d3.line()
@@ -241,12 +242,13 @@ function draw_root(root) {
       .attr("text-anchor", "middle")
       .text(n.label);
   });
+  //至此 首先画出上层的节点 然后递归的画出每个节点的子图
 
   //递归画每个子节点的图
   for (var i = 0; i < root.children.length; i++) {
     var n = root.children[i];
     if (n.expanded) {
-      draw_root(n);
+      draw_root(n, svgGroup);
     }
   }
 
@@ -278,7 +280,12 @@ const renderGraph = () => {
 
   // Create an SVG group
   const svgEl = d3.select(svg.value);
-  const svgGroup = svgEl.append("g");
+
+  // Create a container for zoom and pan
+  const zoomGroup = svgEl.append("g");
+
+  // Create a group for the graph elements
+  const svgGroup = zoomGroup.append("g");
 
   // Draw edges
   g.edges().forEach(edge => {
@@ -315,17 +322,36 @@ const renderGraph = () => {
       .text(n.label);
   });
 
-  // Center the graph
-  const xCenterOffset = (svgEl.attr("width") - g.graph().width) / 2;
-  svgGroup.attr("transform", `translate(${xCenterOffset}, 20)`);
-  svgEl.attr("height", g.graph().height + 40);
+  // // Center the graph
+  // const xCenterOffset = (svgEl.attr("width") - g.graph().width) / 2;
+  // svgGroup.attr("transform", `translate(${xCenterOffset}, 20)`);
+  // svgEl.attr("height", g.graph().height + 40);
+
+  // Add zoom behavior
+  const zoom = d3.zoom()
+    .scaleExtent([0.5, 2])
+    .on("zoom", (event) => {
+      svgGroup.attr("transform", d3.event.transform);
+    });
+
+  svgEl.call(zoom);
+
 };
 
 onMounted(() => {
   // renderGraph();
+
+  const svgEl = d3.select(svg.value);
+  const zoomGroup = svgEl.append("g");
+  const svgGroup = zoomGroup.append("g");
+
   compute_node(root);
   console.log(root);
-  draw_root(root);
+  draw_root(root, svgGroup);
+  const zoom = d3.zoom().on("zoom", function (event) {
+    svgGroup.attr("transform", d3.event.transform);
+  });
+  svgEl.call(zoom);
 
 });
 </script>
