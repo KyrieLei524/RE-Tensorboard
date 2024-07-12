@@ -3,6 +3,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import DAG from './components/DAG.vue'
 import DAG2 from './components/DAG.vue'
 import new_nodes from './components/dagre_try.vue'
+import temp from './components/tt.vue'
 </script>
 
 <template>
@@ -16,8 +17,9 @@ import new_nodes from './components/dagre_try.vue'
   </div>
   <HelloWorld msg="Vite + Vue" /> -->
   <!-- <DAG /> -->
-   <new_nodes />
-    <!-- <DAG2></DAG2> -->
+  <!-- <new_nodes /> -->
+  <!-- <DAG2></DAG2> -->
+  <temp></temp>
 </template>
 
 <style scoped>
@@ -27,9 +29,11 @@ import new_nodes from './components/dagre_try.vue'
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }

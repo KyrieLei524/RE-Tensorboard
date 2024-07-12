@@ -210,9 +210,9 @@ function compute_node(node) {
   node.height = graph.height * 1.5;
 }
 function getNodeShape(node) {
-  if (node.raw_info.op === 'Const') {
+  if (node.raw_info.node_type === 0) {
     return 'circle';
-  } else if (node.raw_info.op === 'NoOp') {
+  } else if (node.raw_info.node_type === 1) {
     return 'ellipse';
   } else {
     return 'rect';
@@ -257,51 +257,128 @@ function draw_root(root, svgGroup) {
       .attr("marker-end", "url(#arrowhead)"); // 添加箭头
   });
 
-  // Draw nodes
-  g.nodes().forEach(node => {
-    const n = g.node(node);
-    // console.log(n)
-    const nodeGroup = svgGroup.append("g")
-      .attr("id", node.replace(/\//g, "-")) //建立id,方便后续再次寻找，注意这里名字不能带反斜杠，所以需要替换
-      .attr("transform", `translate(${n.x - n.width / 2 + root.x}, ${n.y - n.height / 2 + root.y})`);
+  g.nodes().forEach(nodeLabel => {
+    const n = g.node(nodeLabel);
+    const node_obj = my_nodes.get(nodeLabel);
+    const shape = getNodeShape(node_obj);
 
-    // 画完图以后就应该更新刚刚画的这个节点的位置信息 是绝对位置 因为每次画的时候已经是绝对位置了
-    const node_obj = map.get(node);
+    const nodeGroup = svgGroup.append("g")
+      .attr("id", nodeLabel.replace(/\//g, "-")) //建立id,方便后续再次寻找，注意这里名字不能带反斜杠，所以需要替换
+      .attr("transform", `translate(${n.x - n.width / 2 + root.x}, ${n.y - n.height / 2 + root.y})`);
+    // .attr("class", "node");
+
     node_obj.x = n.x - n.width / 2 + root.x;
     node_obj.y = n.y - n.height / 2 + root.y;
 
-    nodeGroup.append("rect")
-      .attr("width", n.width)
-      .attr("height", n.height)
-      .attr("rx", 10)
-      .attr("ry", 10)
-      .attr("stroke", "#333")
-      .attr("fill", "#fff")
-      .on("dblclick", function (event) {
-        console.log("dbclick");
-        if (node_obj.children.length === 0) {
-          return;
-        }
-        node_obj.expanded = !node_obj.expanded;
-        compute_node(root);
-        svgGroup.selectAll("*").remove();
-        draw_root(root, svgGroup);
-      })
-      .on("click", function (event) {
-        if(selectedNode.value.label === node_obj.label){
-          console.log("same node");
-          selectedNode.value = root;
-          return;
-        }
-        selectedNode.value = node_obj;
-      });
+    if (shape === 'circle') {
+      nodeGroup.append("circle")
+        .attr("cx", n.width / 2)
+        .attr("cy", n.height / 2)
+        .attr("r", Math.min(n.width, n.height) / 2)
+        .attr("stroke", "#333")
+        .attr("fill", "#fff")
+        .on("dblclick", function (event) {
+          console.log("dbclick");
+          if (node_obj.children.length === 0) {
+            return;
+          }
+          node_obj.expanded = !node_obj.expanded;
+          compute_node(root);
+          svgGroup.selectAll("*").remove();
+          draw_root(root, svgGroup);
+        })
+        .on("click", function (event) {
+          if (selectedNode.value.label === node_obj.label) {
+            console.log("same node");
+            selectedNode.value = root;
+            return;
+          }
+          selectedNode.value = node_obj;
+        })
+        .on("mouseover", function (event) {
+          //以中心为基准，放大1.1倍
+          d3.select(this).attr("fill", "#f5f5f5");
+
+        })
+        .on("mouseout", function (event) {
+          d3.select(this).attr("fill", "#fff");
+        });
+    } else if (shape === 'ellipse') {
+      nodeGroup.append("ellipse")
+        .attr("cx", n.width / 2)
+        .attr("cy", n.height / 2)
+        .attr("rx", n.width / 2)
+        .attr("ry", n.height / 2)
+        .attr("stroke", "#333")
+        .attr("fill", "#fff")
+        .on("dblclick", function (event) {
+          console.log("dbclick");
+          if (node_obj.children.length === 0) {
+            return;
+          }
+          node_obj.expanded = !node_obj.expanded;
+          compute_node(root);
+          svgGroup.selectAll("*").remove();
+          draw_root(root, svgGroup);
+        })
+        .on("click", function (event) {
+          if (selectedNode.value.label === node_obj.label) {
+            console.log("same node");
+            selectedNode.value = root;
+            return;
+          }
+          selectedNode.value = node_obj;
+        })
+        .on("mouseover", function (event) {
+          //以中心为基准，放大1.1倍
+          d3.select(this).attr("fill", "#f5f5f5");
+
+        })
+        .on("mouseout", function (event) {
+          d3.select(this).attr("fill", "#fff");
+        });
+    } else {
+      nodeGroup.append("rect")
+        .attr("width", n.width)
+        .attr("height", n.height)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .attr("stroke", "#333")
+        .attr("fill", "#fff")
+        .on("dblclick", function (event) {
+          console.log("dbclick");
+          if (node_obj.children.length === 0) {
+            return;
+          }
+          node_obj.expanded = !node_obj.expanded;
+          compute_node(root);
+          svgGroup.selectAll("*").remove();
+          draw_root(root, svgGroup);
+        })
+        .on("click", function (event) {
+          if (selectedNode.value.label === node_obj.label) {
+            console.log("same node");
+            selectedNode.value = root;
+            return;
+          }
+          selectedNode.value = node_obj;
+        })
+        .on("mouseover", function (event) {
+          //以中心为基准，放大1.1倍
+          d3.select(this).attr("fill", "#f5f5f5");
+
+        })
+        .on("mouseout", function (event) {
+          d3.select(this).attr("fill", "#fff");
+        });
+    }
 
     nodeGroup.append("text")
       .attr("x", n.width / 2)
       .attr("y", n.height / 2)
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
-      .text(n.label.split('/').pop()).on("dblclick", function (event) {
+      .text(nodeLabel.split('/').pop()).on("dblclick", function (event) {
         console.log("dbclick");
         if (node_obj.children.length === 0) {
           return;
@@ -325,7 +402,7 @@ function draw_root(root, svgGroup) {
 
 watch(selectedNode, (newVal, oldVal) => {
 
-  if(oldVal === newVal){
+  if (oldVal === newVal) {
     selectedNode.value = null;
     return;
   }
@@ -408,16 +485,23 @@ onMounted(() => {
   fill: #fff;
   stroke-width: 1.5px;
   transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  /* Adds cursor pointer on hover */
 }
 
-.node:hover rect,
-.node:hover circle,
-.node:hover ellipse,
-.node:hover polygon {
-  stroke: #333;
-  fill: #f5f5f5;
-  stroke-width: 1.5px;
-  filter: url(#hover-shadow);
-  transform: scale(1.1);
+.node rect:hover,
+.node circle:hover,
+.node ellipse:hover,
+.node polygon:hover {
+  fill: #b3d9ff;
+  /* Lighter blue on hover */
+}
+
+.node rect.active,
+.node circle.active,
+.node ellipse.active,
+.node polygon.active {
+  fill: #4d94ff;
+  /* Darker blue on click */
 }
 </style>
