@@ -21,6 +21,13 @@
       </div>
     </div>
   </div>
+  <div class="edge-info-panel" v-if="selectedEdge">
+    <h3>{{ selectedEdge.source }} -> {{ selectedEdge.target }}</h3>
+    <div v-for="input in selectedEdge.info_array" :key="input" class="input">
+      {{ input }}
+    </div>
+  </div>
+
   <div>
     <svg ref="svg" :width="width" :height="height"></svg>
   </div>
@@ -36,11 +43,6 @@ import { componentToSlot } from 'element-plus/es/components/table-v2/src/utils.m
 const width = 1200;
 const height = 800;
 const svg = ref(null);
-
-
-// 创建一个图的层次信息 图之间有很多关系
-
-const g = new dagre.graphlib.Graph();
 
 //开始处理node_data 
 //首先根据每个node的json完整信息建立存图所有的数据节点信息 先不存图的子节点信息 先把所有的节点建立起来 并存到map里面再说
@@ -91,7 +93,6 @@ node_data.forEach(element => {
   }
   my_nodes.set(element.name, node);
 });
-
 
 //现在开始处理children的信息
 //首先把root的children信息处理一下
@@ -316,7 +317,9 @@ my_edges.forEach((value, key) => {
 
 console.log(root)
 
-var selectedNode = ref(root);
+var selectedNode = ref(null);
+
+var selectedEdge = ref(null);
 
 //根据节点的类型返回节点的大小
 function get_node_size(node) {
@@ -365,7 +368,7 @@ function compute_node(node) {
     rankdir: 'BT',
     ranker: 'tight-tree',
     nodesep: 50,
-    ranksep: 70,
+    // ranksep: 80,
   });
   g.setDefaultEdgeLabel(() => ({}));
   // 方向
@@ -409,6 +412,7 @@ function draw_root(root, svgGroup) {
 
   g.edges().forEach(edge => {
     const my_edge_name = edge.v + '->' + edge.w;
+    console.log(my_edge_name);
 
     const my_edge = my_edges.get(my_edge_name);
     //根据edge_num确定边的粗细 根据edge_complexity_log_sum确定边的颜色
@@ -416,10 +420,11 @@ function draw_root(root, svgGroup) {
     const edge_complexity_log_sum = my_edge.edge_complexity_log_sum;
     const edge_width = 1.5 + 30 * (edge_num / edge_num_max);
     const scaleGray = d3.scaleLinear()
-    .domain([0, edge_complexity_log_sum_max])
-    .range(["#D3D3D3", "#696969"]); // 浅灰到深灰
+      .domain([0, edge_complexity_log_sum_max])
+      .range(["#D3D3D3", "#696969"]); // 浅灰到深灰
 
-const edge_color = scaleGray(edge_complexity_log_sum);
+    const edge_color = scaleGray(edge_complexity_log_sum);
+
 
     const points = g.edge(edge).points;
     const lineGenerator = d3.line()
@@ -434,7 +439,7 @@ const edge_color = scaleGray(edge_complexity_log_sum);
     // 定义箭头标记（每次都可以更新箭头样式）
     svgGroup.append("defs")
       .append("marker")
-      .attr("id", `arrowhead-${edge.v}-${edge.w}`)
+      .attr("id", `arrowhead-${edge.v.toString().replace(/\//g, "-").replace(/>/g, '-')}-${edge.w.toString().replace(/\//g, "-").replace(/>/g, '-')}`)
       .attr("viewBox", "0 0 10 10")
       .attr("refX", 7) // 调整refX使箭头尖端与线条终点对齐
       .attr("refY", 5)
@@ -445,16 +450,48 @@ const edge_color = scaleGray(edge_complexity_log_sum);
       .attr("d", "M 0 0 L 8 5 L 0 10 Q 4 5 0 0") // 修改后的路径，箭头角向后弯曲
       .attr("fill", edge_color);
 
+    // 添加实际显示的路径
     svgGroup.append("path")
       .attr("d", lineGenerator(points))
-      .attr("class", "edgePath")
+      // .attr("class", "edgePath")
+      .attr("id", my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-'))
       .style("stroke", edge_color)
       .style("stroke-width", edge_width)
       .style("fill", "none")
-      .attr("marker-end", `url(#arrowhead-${edge.v}-${edge.w})`); // 使用动态生成的箭头
+      .attr("marker-end", `url(#arrowhead-${edge.v.toString().replace(/\//g, "-").replace(/>/g, '-')}-${edge.w.toString().replace(/>/g, '-').replace(/\//g, "-")})`)
+      ;
+
+    // 添加透明的宽路径用于捕捉点击事件
+    svgGroup.append("path")
+      .attr("d", lineGenerator(points))
+      .attr("class", "edgeClickPath")
+      .style("stroke", "transparent")
+      .style("stroke-width", edge_width * 5) // 设置更宽的点击区域，可以根据需要调整
+      .style("fill", "none")
+      .attr("id", my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-') + "-click")
+      .on("click", function (event) {
+        console.log("click");
+
+        console.log(selectedEdge.value);
+        console.log(my_edge);
+        if (selectedEdge.value !== null && selectedEdge.value.source === my_edge.source && selectedEdge.value.target === my_edge.target) {
+          console.log("same edge");
+          selectedEdge.value = null;
+          return;
+        }
+        selectedEdge.value = my_edge;
+      })
+      .on("mouseover", function (event) {
+        d3.select(this).style("cursor", "pointer");
+        d3.select(`#${my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-')}`).style("stroke-width", edge_width + 3);
+      })
+      .on("mouseout", function (event) {
+        d3.select(`#${my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-')}`).style("stroke-width", edge_width);
+      });
+
+
+
   });
-
-
 
 
   function truncateString(str, length) {
@@ -504,9 +541,9 @@ const edge_color = scaleGray(edge_complexity_log_sum);
           draw_root(root, svgGroup);
         })
         .on("click", function (event) {
-          if (selectedNode.value.label === node_obj.label) {
+          if ( selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
             console.log("same node");
-            selectedNode.value = root;
+            selectedNode.value = null;
             return;
           }
           selectedNode.value = node_obj;
@@ -563,9 +600,9 @@ const edge_color = scaleGray(edge_complexity_log_sum);
           draw_root(root, svgGroup);
         })
         .on("click", function (event) {
-          if (selectedNode.value.label === node_obj.label) {
+          if (selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
             console.log("same node");
-            selectedNode.value = root;
+            selectedNode.value = null;
             return;
           }
           selectedNode.value = node_obj;
@@ -615,16 +652,17 @@ const edge_color = scaleGray(edge_complexity_log_sum);
           draw_root(root, svgGroup);
         })
         .on("click", function (event) {
-          if (selectedNode.value.label === node_obj.label) {
+          console.log(selectedNode)
+          if (selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
             console.log("same node");
-            selectedNode.value = root;
+            selectedNode.value = null;
             return;
           }
           selectedNode.value = node_obj;
         })
         .on("mouseover", function (event) {
-          //以中心为基准，放大1.1倍
           d3.select(this).attr("fill", "#f5f5f5");
+          
         })
         .on("mouseout", function (event) {
           d3.select(this).attr("fill", "#fff");
@@ -665,7 +703,7 @@ watch(selectedNode, (newVal, oldVal) => {
     return;
   }
   //更新新选中节点的样式
-  if (newVal.raw_info['name']) {
+  if (selectedNode.value !== null && newVal.raw_info['name']) {
     const id = newVal.raw_info['name'].toString().replace(/\//g, "-");
     const node = d3.select(`#${id}`);
     const shape = getNodeShape(newVal);
@@ -678,7 +716,7 @@ watch(selectedNode, (newVal, oldVal) => {
     }
   }
   //更新旧选中节点的样式
-  if (oldVal.raw_info['name']) {
+  if (oldVal !== null && oldVal.raw_info['name']) {
     const old_id = oldVal.raw_info['name'].toString().replace(/\//g, "-");
     const old_node = d3.select(`#${old_id}`);
     const shape = getNodeShape(oldVal);
@@ -692,6 +730,49 @@ watch(selectedNode, (newVal, oldVal) => {
   }
 });
 
+watch(selectedEdge, (newVal, oldVal) => {
+  if (oldVal === newVal) {
+    selectedEdge.value = null;
+    return;
+  }
+  //更新新选中节点的样式
+  if (newVal) {
+    const id = newVal.source + '->' + newVal.target;
+    const edge = d3.select(`#${id.toString().replace(/\//g, "-").replace(/>/g, '-')}`);
+    const arrow = d3.select(`#arrowhead-${newVal.source.toString().replace(/\//g, "-").replace(/>/g, '-')}-${newVal.target.toString().replace(/>/g, '-').replace(/\//g, "-")}`);
+
+    arrow.attr("fill", "#ff0000")
+      .attr("stroke", "#ff0000")
+      .style("stroke", "#ff0000");
+
+    edge.style("stroke", "#ff0000")
+      .style("stroke-width", 3);
+
+  }
+  //更新旧选中节点的样式
+  if (oldVal) {
+    const old_id = oldVal.source + '->' + oldVal.target;
+    const old_edge = d3.select(`#${old_id.toString().replace(/\//g, "-").replace(/>/g, '-')}`);
+    const old_arrow = d3.select(`#arrowhead-${oldVal.source.toString().replace(/\//g, "-").replace(/>/g, '-')}-${oldVal.target.toString().replace(/>/g, '-').replace(/\//g, "-")}`);
+
+    const edge = my_edges.get(old_id);
+    const edge_num = edge.edge_num;
+    const edge_complexity_log_sum = edge.edge_complexity_log_sum;
+    const edge_width = 1.5 + 30 * (edge_num / edge_num_max);
+    const scaleGray = d3.scaleLinear()
+      .domain([0, edge_complexity_log_sum_max])
+      .range(["#D3D3D3", "#696969"]); // 浅灰到深灰
+
+    const edge_color = scaleGray(edge_complexity_log_sum);
+
+    old_arrow.attr("fill", edge_color)
+      .attr("stroke", edge_color)
+      .style("stroke", edge_color);
+
+    old_edge.style("stroke", edge_color)
+      .style("stroke-width", edge_width);
+  }
+});
 
 onMounted(() => {
 
@@ -725,10 +806,29 @@ onMounted(() => {
   top: 10px;
   right: 10px;
   width: 300px;
+  height: 350px;
+  /* 设置固定高度 */
   padding: 10px;
   border: 1px solid #ccc;
   background-color: white;
+  overflow: auto;
+  /* 添加滚动条 */
 }
+
+.edge-info-panel {
+  position: absolute;
+  bottom: 20px;
+  right: 10px;
+  width: 300px;
+  height: 350px;
+  /* 设置固定高度 */
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+  overflow: auto;
+  /* 添加滚动条 */
+}
+
 
 .attributes-section,
 .inputs-section,
@@ -753,23 +853,16 @@ onMounted(() => {
   fill: #fff;
   stroke-width: 1.5px;
   transition: all 0.3s ease-in-out;
-  cursor: pointer;
-  /* Adds cursor pointer on hover */
 }
 
-.node rect:hover,
-.node circle:hover,
-.node ellipse:hover,
-.node polygon:hover {
-  fill: #b3d9ff;
-  /* Lighter blue on hover */
-}
-
-.node rect.active,
-.node circle.active,
-.node ellipse.active,
-.node polygon.active {
-  fill: #4d94ff;
-  /* Darker blue on click */
+.node:hover rect,
+.node:hover circle,
+.node:hover ellipse,
+.node:hover polygon {
+  stroke: #333;
+  fill: #f5f5f5;
+  stroke-width: 1.5px;
+  filter: url(#hover-shadow);
+  transform: scale(1.1);
 }
 </style>
