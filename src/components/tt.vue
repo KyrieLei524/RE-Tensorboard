@@ -41,7 +41,7 @@ import dagre from 'dagre';
 import node_data from "../../../../nodes.json";
 import { componentToSlot } from 'element-plus/es/components/table-v2/src/utils.mjs';
 const width = 1200;
-const height = 800;
+const height = 700;
 const svg = ref(null);
 
 //开始处理node_data 
@@ -85,6 +85,7 @@ node_data.forEach(element => {
     input_num: element.raw_input_nodes.length,
     output_num: element.raw_output_nodes.length,
     all_children_num: 0,
+    color: null,
     const_parent: null, //记录子常量节点的合并常量节点
     const_children: [] //记录合并常量节点的子节点 这个里面的子常量节点的对象
   };
@@ -92,6 +93,75 @@ node_data.forEach(element => {
     node.parent = 'root';
   }
   my_nodes.set(element.name, node);
+});
+
+function extractPrefix(str) {
+  // 检查字符串末尾是否有数字
+  if (/\d$/.test(str)) {
+    // 如果有，找到最后一个下划线的位置
+    const lastUnderscoreIndex = str.lastIndexOf('_');
+    // 如果找到了下划线，返回前面的部分
+    if (lastUnderscoreIndex !== -1) {
+      return str.substring(0, lastUnderscoreIndex);
+    }
+  }
+  // 如果末尾没有数字或没有找到下划线，返回原字符串
+  return str;
+}
+
+//统计相同名字的结构 
+var name_count = new Map(); //记录同一个结构出现的次数
+node_data.forEach(element => {
+  if (element.node_type !== 2) return;
+  const name = extractPrefix(element.name.split('/').pop());
+
+
+  if (name_count.has(name)) {
+    name_count.get(name).count++;
+
+  } else {
+    name_count.set(name, { name: name, count: 1, color: null });
+  }
+});
+//给多于一个的名字 设置不同的颜色
+const softColors = [
+
+  "#b3cde3", // 浅蓝
+  "#ccebc5", // 浅绿
+  "#decbe4", // 浅紫
+  "#fed9a6", // 浅橙
+  "#d8daeb", // 浅蓝灰
+  "#f7d7c4", // 浅橙粉
+  "#fbb4ae", // 浅粉红
+  "#d3b3e5", // 浅紫罗兰
+  "#e5d8bd", // 浅棕
+  "#fddaec", // 浅紫红
+  "#fae3d9", // 浅珊瑚色
+  "#b6e2d3", // 浅薄荷绿
+  "#ffffcc", // 浅黄
+  "#fcd5ce", // 浅珊瑚粉
+  "#daebe8", // 浅冰蓝
+  "#fff1d0", // 浅奶油黄
+  "#e3e9d2", // 浅青绿
+  "#d9d9d9", // 浅银灰
+  "#c4d8e2", // 浅天蓝
+  "#e4cbf6"  // 浅薰衣草
+];
+var index = 0;
+name_count.forEach((value, key) => {
+  if (value.count > 1) {
+    // 确保数组索引不会越界，使用模运算
+    value.color = softColors[index++];
+  }
+});
+
+//给每个节点设置颜色
+my_nodes.forEach((value, key) => {
+  if (value.raw_info['node_type' !== 2]) return;
+  const name = extractPrefix(value.label.split('/').pop());
+  if (name_count.has(name)) {
+    value.color = name_count.get(name).color;
+  }
 });
 
 //现在开始处理children的信息
@@ -275,8 +345,6 @@ my_edges.forEach((value, key) => {
   }
 });
 
-console.log(wait_add_edges)
-
 wait_add_edges.forEach(element => {
   if (my_edges.has(element.source + '->' + element.target)) {
     my_edges.get(element.source + '->' + element.target).info_array = my_edges.get(element.source + '->' + element.target).info_array.concat(element.info_array);
@@ -314,9 +382,6 @@ my_edges.forEach((value, key) => {
   }
 });
 
-
-console.log(root)
-
 var selectedNode = ref(null);
 
 var selectedEdge = ref(null);
@@ -333,15 +398,13 @@ function get_node_size(node) {
     height = 50;
   } else {
     const all_children_num = node.all_children_num;
-    const max_height = 200;
-    const min_height = 50;
+    const max_height = 250;
+    const min_height = 80;
     height = min_height + (max_height - min_height) * (all_children_num / max_children);
-    width = 150;
+    width = 180;
   }
   return [width, height];
 }
-
-// console.log(root)
 
 //计算每个图的dagre布局
 function compute_node(node) {
@@ -387,8 +450,8 @@ function compute_node(node) {
   node.dagreGraph = g;
   //更新这个节点的大小信息
   var graph = g.graph();
-  node.width = graph.width * 1.5;
-  node.height = graph.height * 1.5;
+  node.width = graph.width + 100;
+  node.height = graph.height + 100;
 }
 
 //获取节点大小的函数
@@ -403,17 +466,15 @@ function getNodeShape(node) {
 }
 
 //根据节点的信息绘制子图
-function draw_root(root, svgGroup) {
-  if (root.children.length === 0 || !root.expanded) {
+function draw_root(root1, svgGroup) {
+  if (root1.children.length === 0 || !root1.expanded) {
     return;
   }
   //先画这个节点的图
-  var g = root.dagreGraph;
+  var g = root1.dagreGraph;
 
   g.edges().forEach(edge => {
     const my_edge_name = edge.v + '->' + edge.w;
-    console.log(my_edge_name);
-
     const my_edge = my_edges.get(my_edge_name);
     //根据edge_num确定边的粗细 根据edge_complexity_log_sum确定边的颜色
     const edge_num = my_edge.edge_num;
@@ -428,8 +489,8 @@ function draw_root(root, svgGroup) {
 
     const points = g.edge(edge).points;
     const lineGenerator = d3.line()
-      .x(d => d.x + root.x)
-      .y(d => d.y + root.y)
+      .x(d => d.x + root1.x + 50)
+      .y(d => d.y + root1.y + 50)
       .curve(d3.curveBasis); // 使用曲线生成器
 
     // 动态设置线条和箭头的颜色和粗细
@@ -470,12 +531,7 @@ function draw_root(root, svgGroup) {
       .style("fill", "none")
       .attr("id", my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-') + "-click")
       .on("click", function (event) {
-        console.log("click");
-
-        console.log(selectedEdge.value);
-        console.log(my_edge);
         if (selectedEdge.value !== null && selectedEdge.value.source === my_edge.source && selectedEdge.value.target === my_edge.target) {
-          console.log("same edge");
           selectedEdge.value = null;
           return;
         }
@@ -488,8 +544,6 @@ function draw_root(root, svgGroup) {
       .on("mouseout", function (event) {
         d3.select(`#${my_edge_name.toString().replace(/\//g, "-").replace(/>/g, '-')}`).style("stroke-width", edge_width);
       });
-
-
 
   });
 
@@ -514,11 +568,11 @@ function draw_root(root, svgGroup) {
 
     const nodeGroup = svgGroup.append("g")
       .attr("id", nodeLabel.replace(/\//g, "-")) //建立id,方便后续再次寻找，注意这里名字不能带反斜杠，所以需要替换
-      .attr("transform", `translate(${n.x - n.width / 2 + root.x}, ${n.y - n.height / 2 + root.y})`);
+      .attr("transform", `translate(${n.x - n.width / 2 + root1.x + 50}, ${n.y - n.height / 2 + root1.y + 50})`);
     // .attr("class", "node");
 
-    node_obj.x = n.x - n.width / 2 + root.x;
-    node_obj.y = n.y - n.height / 2 + root.y;
+    node_obj.x = n.x - n.width / 2 + root1.x + 50;
+    node_obj.y = n.y - n.height / 2 + root1.y + 50;
 
     //根据点的形状画出节点
     if (shape === 'circle') {
@@ -530,19 +584,8 @@ function draw_root(root, svgGroup) {
         .attr("fill", "#fff")
         .style("cursor", "pointer")
         .style("stroke-width", 1)
-        .on("dblclick", function (event) {
-          console.log("dbclick");
-          if (node_obj.children.length === 0) {
-            return;
-          }
-          node_obj.expanded = !node_obj.expanded;
-          compute_node(root);
-          svgGroup.selectAll("*").remove();
-          draw_root(root, svgGroup);
-        })
         .on("click", function (event) {
-          if ( selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
-            console.log("same node");
+          if (selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
             selectedNode.value = null;
             return;
           }
@@ -568,16 +611,7 @@ function draw_root(root, svgGroup) {
         .attr("y", n.height / 2)
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
-        .text(name).on("dblclick", function (event) {
-          console.log("dbclick");
-          if (node_obj.children.length === 0) {
-            return;
-          }
-          node_obj.expanded = !node_obj.expanded;
-          compute_node(root);
-          svgGroup.selectAll("*").remove();
-          draw_root(root, svgGroup);
-        });
+        .text(name);
 
     } else if (shape === 'ellipse') {
       nodeGroup.append("ellipse")
@@ -589,19 +623,8 @@ function draw_root(root, svgGroup) {
         .attr("fill", "#fff")
         .style("cursor", "pointer")
         .style("stroke-width", 1)
-        .on("dblclick", function (event) {
-          console.log("dbclick");
-          if (node_obj.children.length === 0) {
-            return;
-          }
-          node_obj.expanded = !node_obj.expanded;
-          compute_node(root);
-          svgGroup.selectAll("*").remove();
-          draw_root(root, svgGroup);
-        })
         .on("click", function (event) {
           if (selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
-            console.log("same node");
             selectedNode.value = null;
             return;
           }
@@ -620,29 +643,21 @@ function draw_root(root, svgGroup) {
         .attr("y", n.height / 2)
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
-        .text(truncateString(nodeLabel.split('/').pop(), 8)).on("dblclick", function (event) {
-          console.log("dbclick");
-          if (node_obj.children.length === 0) {
-            return;
-          }
-          node_obj.expanded = !node_obj.expanded;
-          compute_node(root);
-          svgGroup.selectAll("*").remove();
-          draw_root(root, svgGroup);
-        });
+        .text(truncateString(nodeLabel.split('/').pop(), 8));
 
     } else {
+      const color = node_obj.color === null ? '#fff' : node_obj.color;
+
       nodeGroup.append("rect")
         .attr("width", n.width)
         .attr("height", n.height)
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("stroke", "#333")
-        .attr("fill", "#fff")
+        .attr("fill", color)
         .style("cursor", "pointer")
         .style("stroke-width", 2)
         .on("dblclick", function (event) {
-          console.log("dbclick");
           if (node_obj.children.length === 0) {
             return;
           }
@@ -650,22 +665,23 @@ function draw_root(root, svgGroup) {
           compute_node(root);
           svgGroup.selectAll("*").remove();
           draw_root(root, svgGroup);
+
         })
         .on("click", function (event) {
-          console.log(selectedNode)
+
           if (selectedNode.value !== null && selectedNode.value.label === node_obj.label) {
-            console.log("same node");
+
             selectedNode.value = null;
             return;
           }
           selectedNode.value = node_obj;
         })
         .on("mouseover", function (event) {
-          d3.select(this).attr("fill", "#f5f5f5");
-          
+          d3.select(this).style("stroke-width", 5);
+
         })
         .on("mouseout", function (event) {
-          d3.select(this).attr("fill", "#fff");
+          d3.select(this).style("stroke-width", 2);
         });
 
       nodeGroup.append("text")
@@ -676,7 +692,7 @@ function draw_root(root, svgGroup) {
         .style("font-size", "17px")
         .style("font-weight", "bold")
         .text(truncateString(nodeLabel.split('/').pop(), 12)).on("dblclick", function (event) {
-          console.log("dbclick");
+
           if (node_obj.children.length === 0) {
             return;
           }
@@ -692,7 +708,7 @@ function draw_root(root, svgGroup) {
   //至此 首先画出上层的节点 然后递归的画出每个节点的子图
 
   //递归画每个子节点的图
-  root.children.forEach(child => {
+  root1.children.forEach(child => {
     draw_root(child, svgGroup);
   });
 }
@@ -708,11 +724,11 @@ watch(selectedNode, (newVal, oldVal) => {
     const node = d3.select(`#${id}`);
     const shape = getNodeShape(newVal);
     if (shape === 'circle') {
-      node.select("circle").attr("stroke", "#ff0000").attr("fill", "#f5f5f5").style("stroke-width", 3);
+      node.select("circle").attr("stroke", "#ff0000").style("stroke-width", 3);
     } else if (shape === 'ellipse') {
-      node.select("ellipse").attr("stroke", "#ff0000").attr("fill", "#f5f5f5").style("stroke-width", 3);
+      node.select("ellipse").attr("stroke", "#ff0000").style("stroke-width", 3);
     } else {
-      node.select("rect").attr("stroke", "#ff0000").attr("fill", "#f5f5f5").style("stroke-width", 4);
+      node.select("rect").attr("stroke", "#ff0000").style("stroke-width", 5);
     }
   }
   //更新旧选中节点的样式
@@ -721,11 +737,11 @@ watch(selectedNode, (newVal, oldVal) => {
     const old_node = d3.select(`#${old_id}`);
     const shape = getNodeShape(oldVal);
     if (shape === 'circle') {
-      old_node.select("circle").attr("stroke", "#333").attr("fill", "#fff").style("stroke-width", 1);
+      old_node.select("circle").attr("stroke", "#333").style("stroke-width", 1);
     } else if (shape === 'ellipse') {
-      old_node.select("ellipse").attr("stroke", "#333").attr("fill", "#fff").style("stroke-width", 1);
+      old_node.select("ellipse").attr("stroke", "#333").style("stroke-width", 1);
     } else {
-      old_node.select("rect").attr("stroke", "#333").attr("fill", "#fff").style("stroke-width", 2);
+      old_node.select("rect").attr("stroke", "#333").style("stroke-width", 2);
     }
   }
 });
@@ -828,7 +844,6 @@ onMounted(() => {
   overflow: auto;
   /* 添加滚动条 */
 }
-
 
 .attributes-section,
 .inputs-section,
