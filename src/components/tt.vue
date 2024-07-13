@@ -280,7 +280,59 @@ function compute_all_children_num(node) {
 // root.children.remove(my_nodes.get('NoOp'))
 compute_all_children_num(root);
 
+
+//对于所有可以展开的节点 建立连个新的节点 一个是输入节点 一个是输出节点 并将它们添加到这个节点的children里面去
+my_nodes.forEach((value, key) => {
+  if (value.raw_info['node_type'] === 2 && value.children.length > 0) {
+    var input_node = {
+      label: '_' + value.label + '_' + '_input',
+      children: [],
+      expanded: false,
+      dagreGraph: null,
+      width: 0,
+      height: 0,
+      edges: [],
+      x: 0,
+      y: 0,
+      parent: value.label,
+      raw_info: value.raw_info,
+      input_num: 0,
+      output_num: 1,
+      all_children_num: 0,
+      color: null,
+      const_parent: null, //记录子常量节点的合并常量节点
+      const_children: [] //记录合并常量节点的子节点 这个里面的子常量节点的对象
+    };
+    var output_node = {
+      label: '_' + value.label + '_' + '_output',
+      children: [],
+      expanded: false,
+      dagreGraph: null,
+      width: 0,
+      height: 0,
+      edges: [],
+      x: 0,
+      y: 0,
+      parent: value.label,
+      raw_info: value.raw_info,
+      input_num: 1,
+      output_num: 0,
+      all_children_num: 0,
+      color: null,
+      const_parent: null, //记录子常量节点的合并常量节点
+      const_children: [] //记录合并常量节点的子节点 这个里面的子常量节点的对象
+    };
+    my_nodes.set('_' + value.label + '_' + '_input', input_node);
+    my_nodes.set('_' + value.label + '_' + '_output', output_node);
+    value.children.push(input_node);
+    value.children.push(output_node);
+  }
+});
 //现在已经处理了所有node的父子关系，包括root节点 但是还没有添加边的信息
+
+
+
+
 //现在开始处理边的信息 对于每一个节点要统计他的子图的边的信息
 
 //建立边的映射信息 要记录所有的边 后期还需要记录边的points信息 暂时一个obj存储边
@@ -325,6 +377,8 @@ my_edges.forEach((value, key) => {
     edge_num: 0,
     edge_complexity_log_sum: 0
   };
+  const source_node = my_nodes.get(source);
+  const target_node = my_nodes.get(target);
   //判断这条边的起始点和终止点是不是拥有相同的parent
   if (my_nodes.get(source).parent === my_nodes.get(target).parent) {
     const parent_name = my_nodes.get(source).parent;
@@ -344,9 +398,16 @@ my_edges.forEach((value, key) => {
       my_nodes.get(parent_name).edges.push(edge_obj);
     }
 
+  } else if (source_node.parent === target) {
+    edge_obj.target = '_' + target + '_' + '_output';
+    target_node.edges.push(edge_obj);
+    wait_add_edges.push(edge_obj);
+  } else if (target_node.parent === source) {
+    edge_obj.source = '_' + source + '_' + '_input';
+    source_node.edges.push(edge_obj);
+    wait_add_edges.push(edge_obj);
   }
 });
-
 wait_add_edges.forEach(element => {
   if (my_edges.has(element.source + '->' + element.target)) {
     my_edges.get(element.source + '->' + element.target).info_array = my_edges.get(element.source + '->' + element.target).info_array.concat(element.info_array);
@@ -385,7 +446,6 @@ my_edges.forEach((value, key) => {
 });
 
 var selectedNode = ref(null);
-
 var selectedEdge = ref(null);
 
 //根据节点的类型返回节点的大小
@@ -479,9 +539,10 @@ function draw_root(root1, svgGroup) {
     const my_edge_name = edge.v + '->' + edge.w;
     const my_edge = my_edges.get(my_edge_name);
     //根据edge_num确定边的粗细 根据edge_complexity_log_sum确定边的颜色
+    console.log(my_edge);
     const edge_num = my_edge.edge_num;
     const edge_complexity_log_sum = my_edge.edge_complexity_log_sum;
-    const edge_width = 1.5 + 30 * (edge_num / edge_num_max);
+    const edge_width = 1.5 + 25 * (edge_num / edge_num_max);
     const scaleGray = d3.scaleLinear()
       .domain([0, edge_complexity_log_sum_max])
       .range(["#D3D3D3", "#696969"]); // 浅灰到深灰
@@ -506,8 +567,8 @@ function draw_root(root1, svgGroup) {
       .attr("viewBox", "0 0 10 10")
       .attr("refX", 7) // 调整refX使箭头尖端与线条终点对齐
       .attr("refY", 5)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
+      .attr("markerWidth", 5)
+      .attr("markerHeight", 5)
       .attr("orient", "auto")
       .append("path")
       .attr("d", "M 0 0 L 8 5 L 0 10 Q 4 5 0 0") // 修改后的路径，箭头角向后弯曲
