@@ -70,6 +70,7 @@ my_nodes.set('root', root);
 
 //针对每个节点创建对象 
 node_data.forEach(element => {
+
   var node = {
     label: element.name,
     children: [],
@@ -167,7 +168,8 @@ my_nodes.forEach((value, key) => {
 //现在开始处理children的信息
 //首先把root的children信息处理一下
 node_data.forEach(element => {
-  if (element.layer_num === 1) {
+  if (element.layer_num === 1 && element.name !== "NoOp") {
+
     root.children.push(my_nodes.get(element.name));
   }
 });
@@ -275,7 +277,7 @@ function compute_all_children_num(node) {
     max_children = sum;
   }
 }
-
+// root.children.remove(my_nodes.get('NoOp'))
 compute_all_children_num(root);
 
 //现在已经处理了所有node的父子关系，包括root节点 但是还没有添加边的信息
