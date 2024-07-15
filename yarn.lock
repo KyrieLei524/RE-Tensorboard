@@ -828,7 +828,7 @@ async-validator@^4.2.5:
 
 backbone@~1.4.1:
   version "1.4.1"
-  resolved "https://registry.npmmirror.com/backbone/-/backbone-1.4.1.tgz#099a78184bc07b034048a8332229c2ccca1e3e62"
+  resolved "https://registry.npmmirror.com/backbone/-/backbone-1.4.1.tgz"
   integrity sha512-ADy1ztN074YkWbHi8ojJVFe3vAanO/lrzMGZWUClIP7oDD/Pjy2vrASraUP+2EVCfIiTtCW4FChVow01XneivA==
   dependencies:
     underscore ">=1.8.3"
@@ -1114,10 +1114,10 @@ dayjs@^1.11.3:
   resolved "https://registry.npmmirror.com/dayjs/-/dayjs-1.11.11.tgz"
   integrity sha512-okzr3f11N6WuqYtZSvm+F776mB41wRZMhKP+hc34YdW+KmtYYK9iqvHSwo2k9FEH3fhGXvOPV6yz2IcSrfRUDg==
 
-element-plus@^2.7.6:
-  version "2.7.6"
-  resolved "https://registry.npmmirror.com/element-plus/-/element-plus-2.7.6.tgz"
-  integrity sha512-36sw1K23hYjgeooR10U6CiCaCp2wvOqwoFurADZVlekeQ9v5U1FhJCFGEXO6i/kZBBMwsE1c9fxjLs9LENw2Rg==
+element-plus@^2.7.7:
+  version "2.7.7"
+  resolved "https://registry.npmmirror.com/element-plus/-/element-plus-2.7.7.tgz#317a4b826d577f4572ca040f2568eb751edd891d"
+  integrity sha512-7ucUiDAxevyBE8JbXBTe9ofHhS047VmWMLoksE45zZ08XSnhnyG7WUuk3gmDbAklfVMHedb9sEV3OovPUWt+Sw==
   dependencies:
     "@ctrl/tinycolor" "^3.4.1"
     "@element-plus/icons-vue" "^2.3.1"
@@ -1200,7 +1200,7 @@ iconv-lite@0.4:
 
 jointjs@^3.7.7:
   version "3.7.7"
-  resolved "https://registry.npmmirror.com/jointjs/-/jointjs-3.7.7.tgz#d3255f18f6b0ed3074c488ac0178d0338b6051dd"
+  resolved "https://registry.npmmirror.com/jointjs/-/jointjs-3.7.7.tgz"
   integrity sha512-gwjyLfXIxovVCIHrg57WG0cyPt6dsJjgnGEGOt8gh2F2kp/T1x6z7kBf62eQqSnM7qn1XiheZV4Iopzd2doHlw==
   dependencies:
     backbone "~1.4.1"
@@ -1211,7 +1211,7 @@ jointjs@^3.7.7:
 
 jquery@~3.7.1:
   version "3.7.1"
-  resolved "https://registry.npmmirror.com/jquery/-/jquery-3.7.1.tgz#083ef98927c9a6a74d05a6af02806566d16274de"
+  resolved "https://registry.npmmirror.com/jquery/-/jquery-3.7.1.tgz"
   integrity sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==
 
 lodash-es@^4.17.21:
@@ -1307,7 +1307,7 @@ source-map-js@^1.2.0:
 
 underscore@>=1.8.3:
   version "1.13.6"
-  resolved "https://registry.npmmirror.com/underscore/-/underscore-1.13.6.tgz#04786a1f589dc6c09f761fc5f45b89e935136441"
+  resolved "https://registry.npmmirror.com/underscore/-/underscore-1.13.6.tgz"
   integrity sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==
 
 vite@^5.3.1:
